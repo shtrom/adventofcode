@@ -2,7 +2,59 @@ import System.IO
 
 main = do
   input <- getContents
-  print input
+  let passports = lines2 input
+  print passports
+
+-- | 'lines2' breaks a string up into a list of strings at newline
+-- characters.  The resulting strings do not contain newlines2.
+--
+-- Note that after splitting the string at newline characters, the
+-- last part of the string is considered a line even if it doesn't end
+-- with a newline. For example,
+--
+-- >>> lines2 ""
+-- []
+--
+-- >>> lines2 "\n"
+-- ["\n"]
+--
+-- >>> lines2 "one"
+-- ["one"]
+--
+-- >>> lines2 "one\n"
+-- ["one\n"]
+--
+-- >>> lines2 "one\n\n"
+-- ["one"]
+--
+-- >>> lines2 "one\ntwo"
+-- ["one\ntwo"]
+--
+-- >>> lines2 "one\ntwo\n"
+-- ["one\ntwo\n"]
+--
+-- >>> lines2 "one\n\ntwo"
+-- ["one","two"]
+--
+-- >>> lines2 "one\n\ntwo\n"
+-- ["one","two\n"]
+--
+-- >>> lines2 "one\n\ntwo\n\n"
+-- ["one","two"]
+--
+-- Thus @'lines2' s@ contains at least as many elements as newlines in @s@.
+lines2                   :: String -> [String]
+lines2 ""                =  []
+-- Somehow GHC doesn't detect the selector thunks in the below code,
+-- so s' keeps a reference to the first line via the pair and we have
+-- a space leak (cf. #4334).
+-- So we need to make GHC see the selector thunks with a trick.
+lines2 s                 =  cons (case break2 (== '\n') s of
+                                    (l, s') -> (l, case s' of
+                                                    []      -> []
+                                                    _:_:s''   -> lines2 s''))
+  where
+    cons ~(h, t)        =  h : t
 
 -- | Break a list with at two consecutive matches
 --
