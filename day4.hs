@@ -63,15 +63,15 @@ isValidPassport p = (length (filter (isValidPassportField) p)) == 7
 -- - pid (Passport ID)
 -- with cid being optional
 isValidPassportField :: PassportField -> Bool
-isValidPassportField pf = case take 4 pf of "byr:" -> True
-                                            "iyr:" -> True
-                                            "eyr:" -> True
-                                            "hgt:" -> True
-                                            "hcl:" -> True
-                                            "ecl:" -> True
-                                            "pid:" -> True
-                                            -- "cid:" -> True
-                                            otherwise -> False
+isValidPassportField pf = case splitPasswordField pf of ("byr", _) -> True
+                                                        ("iyr", _) -> True
+                                                        ("eyr", _) -> True
+                                                        ("hgt", _) -> True
+                                                        ("hcl", _) -> True
+                                                        ("ecl", _) -> True
+                                                        ("pid", _) -> True
+                                                        -- ("cid:", ) -> True
+                                                        otherwise -> False
 
 isValidPassportData :: [PassportField] -> Bool
 isValidPassportData p = (length (filter (isValidPassportFieldValue) p)) == 7
@@ -94,32 +94,80 @@ isValidPassportData p = (length (filter (isValidPassportFieldValue) p)) == 7
 -- False
 -- >>> isValidPassportFieldValue "byr:1919"
 -- False
+--
+-- >>> isValidPassportFieldValue "hgt:60in"
+-- True
+-- >>> isValidPassportFieldValue "hgt:190cm"
+-- True
+-- >>> isValidPassportFieldValue "hgt:190in"
+-- False
+-- >>> isValidPassportFieldValue "hgt:190"
+-- False
+--
 -- >>> isValidPassportFieldValue "hcl:#123abc"
 -- True
 -- >>> isValidPassportFieldValue "hcl:#123abz"
 -- False
 -- >>> isValidPassportFieldValue "hcl:123abc"
 -- False
-isValidPassportFieldValue pf = case wordsWhen (==':') pf of ["byr", byr ] -> ((length byr == 4)
+--
+-- >>> isValidPassportFieldValue "ecl:brn"
+-- True
+-- >>> isValidPassportFieldValue "ecl:wat"
+-- False
+--
+-- >>> isValidPassportFieldValue "pid:000000001"
+-- True
+-- >>> isValidPassportFieldValue "pid:0123456789"
+-- False
+-- >>> isValidPassportFieldValue "pid:00000000s"
+-- False
+isValidPassportFieldValue :: PassportField -> Bool
+isValidPassportFieldValue pf = case (splitPasswordField pf) of ("byr", byr) -> ((length byr == 4)
                                                                              && allHold [(>=1920), (<=2002)] (read byr :: Int))
-                                                            ["iyr", iyr ] -> ((length iyr == 4)
-                                                                             && allHold [(>=2010), (<=2020)] (read iyr :: Int))
-                                                            ["eyr", eyr ] -> ((length eyr == 4)
-                                                                             && allHold [(>=2020), (<=2030)] (read eyr :: Int))
-                                                            ["hgt", hgt ] -> False
-                                                            ["hcl", (hash:hcl) ] -> ((length hcl == 6)
+                                                               ("iyr", iyr) -> ((length iyr == 4)
+                                                                              && allHold [(>=2010), (<=2020)] (read iyr :: Int))
+                                                               ("eyr", eyr) -> ((length eyr == 4)
+                                                                              && allHold [(>=2020), (<=2030)] (read eyr :: Int))
+                                                               ("hgt", hgt) -> (case (break (allHold [(>='a'), (<='z')]) hgt) of (cm, "cm") -> allHold [(>=150), (<=193)] (read cm :: Int)
+                                                                                                                                 (inches, "in") -> allHold [(>=59), (<=76)] (read inches :: Int)
+                                                                                                                                 otherwise -> False
+                                                                               )
+                                                               ("hcl", (hash:hcl)) -> ((length hcl == 6)
                                                                                     && (hash == '#')
-                                                                                    && (foldl (&&) True (map (eitherHolds [(allHold [(>='a'), (<='f')])
-                                                                                                                         ,(allHold [(>='0'), (<='9')])
-                                                                                                                         ]) hcl
-                                                                                                       ))
-                                                                                    )
-                                                            ["ecl", ecl ] -> False
-                                                            ["pid", pid ] -> ((length pid == 9)
-                                                                             && (read pid :: Int) > 0 )
-                                                            ["cid", _ ] -> True
-                                                            otherwise -> False
+                                                                                    && (foldl (&&) True (
+                                                                                        map (eitherHolds [(allHold [(>='a'), (<='f')])
+                                                                                                         ,(allHold [(>='0'), (<='9')])
+                                                                                                         ]) hcl
+                                                                                                        )
+                                                                                       )
+                                                                                     )
+                                                               ("ecl", ecl) -> eitherHolds [(== "amb")
+                                                                                           ,(== "blu")
+                                                                                           ,(== "brn")
+                                                                                           ,(== "gry")
+                                                                                           ,(== "grn")
+                                                                                           ,(== "hzl")
+                                                                                           ,(== "oth")
+                                                                                           ] ecl
+                                                               ("pid", pid) -> ((length pid == 9)
+                                                                                    && (foldl (&&) True (
+                                                                                        map ((allHold [(>='0'), (<='9')])) pid
+                                                                                                        )
+                                                                                       )
+                                                                                     )
+                                                               ("cid", _) -> True
+                                                               otherwise -> False
 
+splitPasswordField :: PassportField-> (String, String)
+splitPasswordField = toTuple2 . wordsWhen (==':')
+
+-- | 'toTuple2' makes a tuple out of a two-element list
+--
+-- >>> toTuple2 [1, 2]
+-- (1,2)
+toTuple2 :: [a] -> (a, a)
+toTuple2 (x1:x2:[]) = (x1, x2)
 
 -- | 'lines2' breaks a string up into a list of strings at newline
 -- characters.  The resulting strings do not contain newlines2.
