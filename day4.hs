@@ -73,6 +73,53 @@ isValidPassportField pf = case take 4 pf of "byr:" -> True
                                             -- "cid:" -> True
                                             otherwise -> False
 
+isValidPassportData :: [PassportField] -> Bool
+isValidPassportData p = (length (filter (isValidPassportFieldValue) p)) == 7
+
+-- | 'isValidPassportFieldValue' verifies that a passport field value is correct
+-- byr (Birth Year) - four digits; at least 1920 and at most 2002.
+-- iyr (Issue Year) - four digits; at least 2010 and at most 2020.
+-- eyr (Expiration Year) - four digits; at least 2020 and at most 2030.
+-- hgt (Height) - a number followed by either cm or in:
+--     If cm, the number must be at least 150 and at most 193.
+--     If in, the number must be at least 59 and at most 76.
+-- hcl (Hair Color) - a # followed by exactly six characters 0-9 or a-f.
+-- ecl (Eye Color) - exactly one of: amb blu brn gry grn hzl oth.
+-- pid (Passport ID) - a nine-digit number, including leading zeroes.
+-- cid (Country ID) - ignored, missing or not.
+--
+-- >>> isValidPassportFieldValue "byr:2002"
+-- True
+-- >>> isValidPassportFieldValue "byr:2003"
+-- False
+-- >>> isValidPassportFieldValue "byr:1919"
+-- False
+-- >>> isValidPassportFieldValue "hcl:#123abc"
+-- True
+-- >>> isValidPassportFieldValue "hcl:#123abz"
+-- False
+-- >>> isValidPassportFieldValue "hcl:123abc"
+-- False
+isValidPassportFieldValue pf = case wordsWhen (==':') pf of ["byr", byr ] -> ((length byr == 4)
+                                                                             && allHold [(>=1920), (<=2002)] (read byr :: Int))
+                                                            ["iyr", iyr ] -> ((length iyr == 4)
+                                                                             && allHold [(>=2010), (<=2020)] (read iyr :: Int))
+                                                            ["eyr", eyr ] -> ((length eyr == 4)
+                                                                             && allHold [(>=2020), (<=2030)] (read eyr :: Int))
+                                                            ["hgt", hgt ] -> False
+                                                            ["hcl", (hash:hcl) ] -> ((length hcl == 6)
+                                                                                    && (hash == '#')
+                                                                                    && (foldl (&&) True (map (eitherHolds [(allHold [(>='a'), (<='f')])
+                                                                                                                         ,(allHold [(>='0'), (<='9')])
+                                                                                                                         ]) hcl
+                                                                                                       ))
+                                                                                    )
+                                                            ["ecl", ecl ] -> False
+                                                            ["pid", pid ] -> ((length pid == 9)
+                                                                             && (read pid :: Int) > 0 )
+                                                            ["cid", _ ] -> True
+                                                            otherwise -> False
+
 
 -- | 'lines2' breaks a string up into a list of strings at newline
 -- characters.  The resulting strings do not contain newlines2.
@@ -154,3 +201,36 @@ break2 p xs@(x1:x2:xs')
   | p x1 && p x2 =  ([],xs)
   | not (p x1) && p x2 =  let (ys,zs) = break2 p (x2:xs') in (x1:ys,zs)
   | otherwise    =  let (ys,zs) = break2 p (xs') in (x1:x2:ys,zs)
+
+-- From https://stackoverflow.com/questions/4978578/how-to-split-a-string-in-haskell
+wordsWhen     :: (Char -> Bool) -> String -> [String]
+wordsWhen p s =  case dropWhile p s of
+                      "" -> []
+                      s' -> w : wordsWhen p s''
+                            where (w, s'') = break p s'
+
+-- | Test that all predicates hold on the given value
+--
+-- >>> allHold [(>1), (>2)] 3
+-- True
+--
+-- >>> allHold [(>1), (>2)] 1
+-- False
+--
+-- >>> allHold [(>2), (>1)] 1
+-- False
+allHold :: [a -> Bool] -> a -> Bool
+allHold ps x = foldl (&&) True $ [ p x | p <- ps ]
+
+-- | Test that any predicates hold on the given value
+--
+-- >>> eitherHolds [(>1), (>2)] 3
+-- True
+--
+-- >>> eitherHolds [(>1), (>2)] 2
+-- True
+--
+-- >>> eitherHolds [(>2), (>1)] 1
+-- False
+eitherHolds :: [a -> Bool] -> a -> Bool
+eitherHolds ps x = foldl (||) False $ [ p x | p <- ps ]
