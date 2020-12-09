@@ -1,4 +1,5 @@
 import System.IO
+import Data.List
 
 data BoardingPass = BoardingPass {row :: Int
                                  , column :: Int
@@ -13,10 +14,11 @@ main = do
   input <- getContents
   let passes = lines input
       bps = [makeBoardingPass passString | passString <- passes]
-      ids = [rowId bp | bp <- bps]
+      ids = sort [rowId bp | bp <- bps]
 
-  print $ maximum ids
-
+  print $ last ids
+  print ids
+  print $ (fst $ head $ filter (\(i, z)-> i /= z) $ zip ids (iterate (\x -> x+1) (head ids))) -1
 
 -- | `makeBoardingPass` creates a boarding pass recordset from a string
 -- >>> makeBoardingPass "BFFFBBFRRR"
