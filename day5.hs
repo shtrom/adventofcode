@@ -13,8 +13,9 @@ main = do
   input <- getContents
   let passes = lines input
       bps = [makeBoardingPass passString | passString <- passes]
+      ids = [rowId bp | bp <- bps]
 
-  print bps
+  print $ maximum ids
 
 
 -- | `makeBoardingPass` creates a boarding pass recordset from a string
