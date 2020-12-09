@@ -6,6 +6,7 @@ toTuple2
 , wordsWhen
 , allHold
 , eitherHolds
+, uniq
 ) where
 
 -- | 'toTuple2' makes a tuple out of a two-element list
@@ -128,3 +129,23 @@ allHold ps x = foldl (&&) True $ [ p x | p <- ps ]
 -- False
 eitherHolds :: [a -> Bool] -> a -> Bool
 eitherHolds ps x = foldl (||) False $ [ p x | p <- ps ]
+
+-- | `uniq` filters out duplicates from an _already-sorted_ list
+-- >>> uniq "abc"
+-- "abc"
+-- >>> uniq "aabc"
+-- "abc"
+-- >>> uniq "aabbc"
+-- "abc"
+-- >>> uniq "abcc"
+-- "abc"
+-- >>> uniq "aabcc"
+-- "abc"
+-- >>> uniq "c"
+-- "c"
+-- >>> uniq "\n\n\nabbbccdeefgiiijjjklllmnnnooopqqqrstttuvvvwyz"
+-- "\nabcdefgijklmnopqrstuvwyz"
+uniq :: Eq a => [a] -> [a]
+uniq [] = []
+uniq xs@(_:[]) = xs
+uniq xs@(x1:x2:xs') = if x1 == x2 then (uniq (x1:xs')) else x1:(uniq (x2:xs'))
