@@ -12,16 +12,35 @@ type BinaryString = String
 main = do
   input <- getContents
   let passes = lines input
-  print input
+      bps = [makeBoardingPass passString | passString <- passes]
+
+  print bps
+
 
 -- | `makeBoardingPass` creates a boarding pass recordset from a string
 -- >>> makeBoardingPass "BFFFBBFRRR"
 --BoardingPass {row = 70, column = 7}
+-- >>> makeBoardingPass "FFFBBBFRRR"
+--BoardingPass {row = 14, column = 7}
+-- >>> makeBoardingPass "BBFFBBFRLL"
+--BoardingPass {row = 102, column = 4}
+--
 makeBoardingPass :: BinaryString -> BoardingPass
 makeBoardingPass bps = let (row, column) = splitAt 7 bps
                         in BoardingPass { row = toInt (BinaryPair 'F' 'B') row
                                         , column = toInt (BinaryPair 'L' 'R') column
                                         }
+
+-- | `rowId` calculates the row ID from a Boarding Pass
+-- >>> rowId $ BoardingPass {row = 70, column = 7}
+-- 567
+-- >>> rowId $ BoardingPass {row = 14, column = 7}
+-- 119
+-- >>> rowId $ BoardingPass {row = 102, column = 4}
+-- 820
+rowId :: BoardingPass -> Int
+rowId bp = (row bp * 8) + (column bp)
+
 -- | `toInt` converts a BinaryString encoding using a BinaryPair MSB first to an Int
 -- >>> toInt (BinaryPair '0' '1') "0"
 -- 0
