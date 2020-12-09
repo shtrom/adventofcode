@@ -7,3 +7,4 @@ main = do
   input <- getContents
   let responses = lines2 input
   print $ foldl1 (+) [ length $ uniq (sort (filter (/= '\n') r)) | r <- responses ]
+  print $ foldl1 (+) [ length $ foldl1 (intersect) r | r <- [ lines r | r <- responses ] ]
