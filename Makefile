@@ -1,6 +1,6 @@
 PYTHON=python3
 
-DAYS=$(patsubst %.in,%,$(wildcard *.in))
+DAYS=$(patsubst %.in,%,$(wildcard day*.in))
 
 run: $(addprefix run-,$(DAYS))
 test: $(addprefix test-,$(DAYS))
