@@ -16,7 +16,7 @@ test-day%: day%.py
 		|| $(PYTHON) -m doctest $(^)
 
 # Haskell
-run-sample%: day%.hs sample%.in
+sample-day%: day%.hs sample%.in
 	runghc $(^) < sample$(*).in
 run-day%: day%.hs day%.in
 	runghc $(^) < day$(*).in
