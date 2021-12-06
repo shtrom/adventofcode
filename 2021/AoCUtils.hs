@@ -3,7 +3,7 @@ module AoCUtils (
         ,toInt
                 ) where
 
---d | Split String at arbitrary character matching predicate
+-- | Split String at arbitrary character matching predicate
 -- >>> splitStringAt (==',') "1,2,3"
 -- ["1","2","3"]
 splitStringAt :: (Char -> Bool) -> String -> [String]
