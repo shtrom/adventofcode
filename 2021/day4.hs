@@ -12,7 +12,7 @@ main = do
 
 -- | Parse an input string into a series of numbers and sheets
 -- >>> parseInput "1,2,3\n\n1  2  3\n1  2  3\n\n3  4  5\n3  4  5\n"
--- ([1,2,3],[[[1,2,3],[1,2,3]],[[3,4,5],[3,4,5]]])
+-- ([Number 1,Number 2,Number 3],[[[Number 1,Number 2,Number 3],[Number 1,Number 2,Number 3]],[[Number 3,Number 4,Number 5],[Number 3,Number 4,Number 5]]])
 parseInput :: String -> ([Number], [Sheet])
 parseInput input = let l = lines2 input in
                        (parseNumbers $ head l
@@ -47,26 +47,26 @@ break2 p l@(x1:x2:xs) = case and [p x1, p x2] of
 
 -- | Parse an input string into a series of numbers
 -- >>> parseNumbers "1,2,3"
--- [1,2,3]
+-- [Number 1,Number 2,Number 3]
 parseNumbers :: String -> [Number]
 parseNumbers x = map toNumber $ splitStringAt (==',') x
 
--- | Parse an input string into a numbers
--- >>> parseNumbers "1"
--- 1
-toNumber :: String -> Number
-toNumber s = Number $ toInt s
-
 -- | Parse a list of input strings into a series of sheets
 -- >>> parseSheets ["1  2  3\n1  2  3", "3  4  5\n3  4  5\n"]
--- [[[1,2,3],[1,2,3]],[[3,4,5],[3,4,5]]]
+-- [[[Number 1,Number 2,Number 3],[Number 1,Number 2,Number 3]],[[Number 3,Number 4,Number 5],[Number 3,Number 4,Number 5]]]
 parseSheets :: [String] -> [Sheet]
 parseSheets l = map parseSheet l
 
 -- | Parse an input string into a sheet
 -- >>> parseSheet "1  2  3\n1  2  3"
--- [[1,2,3],[1,2,3]]
+-- [[Number 1,Number 2,Number 3],[Number 1,Number 2,Number 3]]
 -- >>> parseSheet "3  4  5\n3  4  5\n"
--- [[3,4,5],[3,4,5]]
+-- [[Number 3,Number 4,Number 5],[Number 3,Number 4,Number 5]]
 parseSheet :: String -> Sheet
-parseSheet _ = []
+parseSheet s = map ((map toNumber) . words) $ lines s
+
+-- | Parse an input string into a numbers
+-- >>> toNumber "1"
+-- Number 1
+toNumber :: String -> Number
+toNumber s = Number $ toInt s
