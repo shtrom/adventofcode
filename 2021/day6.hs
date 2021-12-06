@@ -6,12 +6,6 @@ main = do
         line <- getContents
         print $ day6 80 $ map toInt $ splitStringAt (==',') line
 
--- | Day 6 test
--- >>> day6 80 [3,4,3,1,2]
--- 5934
-day6 :: Int -> [Int] -> Int
-day6 _ xs = length $ map (LanternFish) xs
-
 --d | Split String at arbitrary character matching predicate
 -- >>> splitStringAt (==',') "1,2,3"
 -- ["1","2","3"]
@@ -30,6 +24,19 @@ splitStringAt p s = let (xs, ys) = break p s
 -- 2
 toInt :: String -> Int
 toInt s = read s ::Int
+
+-- | Day 6 test
+-- >>> day6 80 [3,4,3,1,2]
+-- 5934
+day6 :: Int -> [Int] -> Int
+day6 i xs = length $ simulateLanternFish i $ map (LanternFish) xs
+
+-- | Simulate lantern fish for the given number of generations
+-- >>> simulateLanternFish 3 [LanternFish 1]
+-- [LanternFish 5,LanternFish 7]
+simulateLanternFish :: Int -> [LanternFish] -> [LanternFish]
+simulateLanternFish 0 xs = xs
+simulateLanternFish n xs = concat $ map iterateLanternFish $ simulateLanternFish (n-1) xs
 
 -- | Iterate a LanternFish
 -- >>> iterateLanternFish (LanternFish 0)
