@@ -2,7 +2,8 @@ import System.IO
 import AoCUtils
 
 data Number = Number Int
-            | Marked deriving Show
+            | Marked
+            deriving (Show, Eq)
 type Sheet = [[Number]]
 
 main = do
@@ -70,3 +71,16 @@ parseSheet s = map ((map toNumber) . words) $ lines s
 -- Number 1
 toNumber :: String -> Number
 toNumber s = Number $ toInt s
+
+-- markSheet :: Number -> Sheet -> Sheet
+-- markSheet n (Sheet s) = map $ (markNumber n) s
+
+-- | Mark a number in a list, if present
+-- >>> markNumber (Number 1) [Number 8,Number 1,Number 3,Number 4,Number 2]
+-- [Number 8,Marked,Number 3,Number 4,Number 2]
+-- >>> markNumber (Number 9) [Number 8,Number 1,Number 3,Number 4,Number 2]
+-- [Number 8,Number 1,Number 3,Number 4,Number 2]
+markNumber :: Number -> [Number] -> [Number]
+markNumber _ [] = []
+markNumber n (x:xs) | x == n = (Marked:xs)
+  | otherwise = (x:markNumber n xs)
