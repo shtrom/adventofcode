@@ -15,6 +15,9 @@ instance Num LanternFish where
 data FishSchool = FishSchool Int LanternFish deriving Show
 instance Eq FishSchool where
         (==) (FishSchool n1 a1) (FishSchool n2 a2) = a1 == a2
+-- | Define an order between fish, so we can sort them --- by age
+-- >>> sort [LanternFish 1,LanternFish 9,LanternFish 2,LanternFish 8]
+-- [LanternFish 1,LanternFish 2,LanternFish 8,LanternFish 9]
 instance Ord FishSchool where
         (>) (FishSchool n1 a1) (FishSchool n2 a2) = a1 > a2
         (<=) (FishSchool n1 a1) (FishSchool n2 a2) = a1 <= a2
@@ -98,15 +101,6 @@ aggregate l@(x:xs) = let (xs, ys) = break (/=x) l
                        (c, x)
                        :aggregate ys
                     )
--- | Sort a list of comparables
--- >>> sort [1,9,2,8]
--- [1,2,8,9]
--- >>> sort [LanternFish 1,LanternFish 9,LanternFish 2,LanternFish 8]
--- [LanternFish 1,LanternFish 2,LanternFish 8,LanternFish 9]
-sort :: Ord a => [a] -> [a]
-sort [] = []
-sort [x] = [x]
-sort (x:xs) = (sort $ filter (<x) xs) ++ [x] ++ (sort $ filter (>=x) xs)
 
 -- | Simulate a whole school of fish
 -- >>> simulateFishSchool [FishSchool 1 (LanternFish 1),FishSchool 2 (LanternFish 2),FishSchool 3 (LanternFish 3)]
