@@ -19,11 +19,11 @@ day41 (n:ns) ss = let ss' = map (markSheet n) ss
                        (s':_) -> (fromNumber n) * scoreSheet s'
                        otherwise -> day41 ns ss'
 
-day42 :: [Number] -> [Sheet] -> Int
+-- day42 :: [Number] -> [Sheet] -> Int
 day42 [] _ = error "No winner"
 day42 (n:ns) ss = let ss' = filter (not . sheetMarked) $ map (markSheet n) ss
                   in case ss' of
-                       (s':[]) -> (fromNumber n) * scoreSheet s'
+                       (s':[]) -> day41 ns ss'
                        otherwise -> day42 ns ss'
 
 -- | Parse an input string into a series of numbers and sheets
