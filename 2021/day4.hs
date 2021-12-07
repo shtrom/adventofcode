@@ -10,6 +10,7 @@ main = do
         input <- getContents
         let (numbers, sheets) = parseInput input
         print $ day41 numbers sheets
+        print $ day42 numbers sheets
 
 day41 :: [Number] -> [Sheet] -> Int
 day41 [] _ = error "No winner"
@@ -17,6 +18,13 @@ day41 (n:ns) ss = let ss' = map (markSheet n) ss
                   in case filter sheetMarked ss' of
                        (s':_) -> (fromNumber n) * scoreSheet s'
                        otherwise -> day41 ns ss'
+
+day42 :: [Number] -> [Sheet] -> Int
+day42 [] _ = error "No winner"
+day42 (n:ns) ss = let ss' = filter (not . sheetMarked) $ map (markSheet n) ss
+                  in case ss' of
+                       (s':[]) -> (fromNumber n) * scoreSheet s'
+                       otherwise -> day42 ns ss'
 
 -- | Parse an input string into a series of numbers and sheets
 -- >>> parseInput "1,2,3\n\n1  2  3\n1  2  3\n\n3  4  5\n3  4  5\n"
