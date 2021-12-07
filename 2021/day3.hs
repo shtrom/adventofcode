@@ -1,4 +1,5 @@
 import System.IO
+import AoCUtils
 
 main = do
         input <- getContents
@@ -47,14 +48,6 @@ selectRow f m = let bitCriterion = f $ countBits1 $ map (head) m
 splitToInts :: [Char] -> [Int]
 splitToInts [] = []
 splitToInts (x:xs) = ((read [x] :: Int) : splitToInts xs)
-
--- | Transpose a matrix
--- https://stackoverflow.com/questions/2578930/understanding-this-matrix-transposition-function-in-haskell
--- >>> transpose [[1,2],[3,4]]
--- [[1,3],[2,4]]
-transpose:: [[a]]->[[a]]
-transpose ([]:_) = []
-transpose x = (map head x) : transpose (map tail x)
 
 -- | Count the number of 0/1 bits in each array of the list
 -- >>> countBits [[0,0,1],[0,1,1]]

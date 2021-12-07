@@ -2,6 +2,7 @@ module AoCUtils (
         sort
         ,splitStringAt
         ,toInt
+        ,transpose
                 ) where
 
 -- | Sort a list of comparables
@@ -30,4 +31,12 @@ splitStringAt p s = let (xs, ys) = break p s
 -- 2
 toInt :: String -> Int
 toInt s = read s ::Int
+
+-- | Transpose a matrix
+-- https://stackoverflow.com/questions/2578930/understanding-this-matrix-transposition-function-in-haskell
+-- >>> transpose [[1,2],[3,4]]
+-- [[1,3],[2,4]]
+transpose:: [[a]]->[[a]]
+transpose ([]:_) = []
+transpose x = (map head x) : transpose (map tail x)
 
