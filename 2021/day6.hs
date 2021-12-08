@@ -18,6 +18,8 @@ instance Eq FishSchool where
 -- | Define an order between fish, so we can sort them --- by age
 -- >>> sort [LanternFish 1,LanternFish 9,LanternFish 2,LanternFish 8]
 -- [LanternFish 1,LanternFish 2,LanternFish 8,LanternFish 9]
+-- >>> aggregate [LanternFish 1,LanternFish 2,LanternFish 2,LanternFish 3,LanternFish 3,LanternFish 3]
+-- [(1,LanternFish 1),(2,LanternFish 2),(3,LanternFish 3)]
 instance Ord FishSchool where
         (>) (FishSchool n1 a1) (FishSchool n2 a2) = a1 > a2
         (<=) (FishSchool n1 a1) (FishSchool n2 a2) = a1 <= a2
@@ -87,20 +89,6 @@ day6' i xs = day6'' (i) $ map makeFishSchool $ (aggregate . sort) $ map LanternF
 day6'' :: Int -> [FishSchool] -> Int
 day6'' 0 xs = sum $ map countFish xs
 day6'' n xs = day6'' (n-1) $ simulateFishSchool xs
-
--- | Given a sorted list, count the re-occurence of each element
--- >>> aggregate [1,2,2,3,3,3]
--- [(1,1),(2,2),(3,3)]
--- >>> aggregate [LanternFish 1,LanternFish 2,LanternFish 2,LanternFish 3,LanternFish 3,LanternFish 3]
--- [(1,LanternFish 1),(2,LanternFish 2),(3,LanternFish 3)]
-aggregate :: Eq a => [a] -> [(Int, a)]
-aggregate [] = []
-aggregate l@(x:xs) = let (xs, ys) = break (/=x) l
-                         c = length xs
-                    in (
-                       (c, x)
-                       :aggregate ys
-                    )
 
 -- | Simulate a whole school of fish
 -- >>> simulateFishSchool [FishSchool 1 (LanternFish 1),FishSchool 2 (LanternFish 2),FishSchool 3 (LanternFish 3)]

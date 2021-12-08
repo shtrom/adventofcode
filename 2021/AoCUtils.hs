@@ -1,9 +1,22 @@
 module AoCUtils (
-        sort
+        aggregate
+        ,sort
         ,splitStringAt
         ,toInt
         ,transpose
                 ) where
+
+-- | Given a sorted list, count the re-occurence of each element
+-- >>> aggregate [1,2,2,3,3,3]
+-- [(1,1),(2,2),(3,3)]
+aggregate :: Eq a => [a] -> [(Int, a)]
+aggregate [] = []
+aggregate l@(x:xs) = let (xs, ys) = break (/=x) l
+                         c = length xs
+                    in (
+                       (c, x)
+                       :aggregate ys
+                    )
 
 -- | Sort a list of comparables
 -- >>> sort [1,9,2,8]
