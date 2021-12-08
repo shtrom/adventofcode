@@ -12,6 +12,7 @@ main = do
         input <- getContents
         let notes = splitInput input
         print $ day81 $ foldl (++) [] $ map snd notes
+        print $ day82 notes
 
 -- | Split the data input
 -- >>> splitInput "be cfbegad cbdgef fgaecd cgeb fdcge agebfd fecdb fabcd edb | fdgacbe cefdb cefbgd gcbe\nedbfga begcd cbg gc gcadebf fbgde acbgfd abcde gfcbed gfec | fcgedb cgb dgebacf gc\nf"
@@ -24,27 +25,41 @@ splitInput l = [
 day81 :: Digits -> Int
 day81 digits = length $ filter simpleDigit digits
 
+day82 :: [(Patterns, Digits)] -> Int
+day82 l = sum $ map readDigits l
+
+-- | Read Pattern and Digits, and determine value
+-- >>> readDigits (["be","cfbegad","cbdgef","fgaecd","cgeb","fdcge","agebfd","fecdb","fabcd","edb"],["fdgacbe","cefdb","cefbgd","gcbe"])
+-- 8394
+readDigits :: (Patterns, Digits) -> Int
+readDigits (ps, d) = readDigits' ps (reverse d)
+
+readDigits' :: Patterns -> Digits -> Int
+readDigits' _ [] = 0
+readDigits' ps (x:xs) = digitValue ps x + 10 * readDigits' ps xs
+
 -- | Determine the digit value
 -- >>> digitValue ["be","cfbegad","cbdgef","fgaecd","cgeb","fdcge","agebfd","fecdb","fabcd","edb"] "edb"
 -- 7
 -- >>> ps = ["be","cfbegad","cbdgef","fgaecd","cgeb","fdcge","agebfd","fecdb","fabcd","edb"]
 -- >>> map (digitValue ps) ps
--- [1,2,3]
+-- [1,8,9,6,4,5,0,3,2,7]
+digitValue :: Patterns -> Digit -> Int
+digitValue ps dg = digitValueFromMap (makeSegmentMap ps) dg
 
--- digitValue :: Patterns -> Digit -> Int
-digitValue ps dg = let (a:b:c:d:e:f:g:[]) = makeSegmentMap ps
-                   in case dg of
-                       (c:f:[]) -> 1
-                       (a:c:d:e:g:[]) -> 2
-                       (a:c:d:f:g:[]) -> 3
-                       (b:c:d:f:[]) -> 4
-                       (a:b:d:f:g:[]) -> 5
-                       (a:b:d:e:f:g:[]) -> 6
-                       (a:c:f:[]) -> 7
-                       (a:b:c:d:e:f:g:[]) -> 8
-                       (a:b:c:d:f:g:[]) -> 9
-                       (a:b:c:e:f:g:[]) -> 0
-                       otherwise -> error ("gobbledygook " ++ dg)
+digitValueFromMap :: [Segment] -> Digit -> Int
+digitValueFromMap (a:b:c:d:e:f:g:[]) dg
+        | all (flip elem dg) (a:b:c:d:e:f:g:[]) = 8
+        | all (flip elem dg) (a:b:d:e:f:g:[]) = 6
+        | all (flip elem dg) (a:b:c:d:f:g:[]) = 9
+        | all (flip elem dg) (a:b:c:e:f:g:[]) = 0
+        | all (flip elem dg) (a:c:d:e:g:[]) = 2
+        | all (flip elem dg) (a:c:d:f:g:[]) = 3
+        | all (flip elem dg) (a:b:d:f:g:[]) = 5
+        | all (flip elem dg) (b:c:d:f:[]) = 4
+        | all (flip elem dg) (a:c:f:[]) = 7
+        | all (flip elem dg) (c:f:[]) = 1
+        | otherwise = error ("gobbledygook " ++ dg)
 
 -- | Determine the segment map
 -- >>> makeSegmentMap ["be","cfbegad","cbdgef","fgaecd","cgeb","fdcge","agebfd","fecdb","fabcd","edb"]
