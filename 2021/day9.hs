@@ -2,42 +2,46 @@ import System.IO
 import AoCUtils
 
 main = do line <-getContents
-          print $ lines line
+          print $ day91 $ lines line
 
 -- | Compute risk
 -- >>> day91 ["2199943210","3987894921","9856789892","8767896789","9899965678"]
---15
--- day91 :: [String] -> Int
--- day91 l = sum $ map (1+) $ map $ findLowPoints l
-day91 l = findLowPoints l
+-- 15
+day91 :: [String] -> Int
+day91 l = sum $ map (1+) $ map cToInt $ findLowPoints l
 
 -- | Find low points in a 2D matrix
 -- >>> findLowPoints ["219", "398","985"]
 -- "15"
 findLowPoints :: (Bounded a, Ord a) => [[a]] -> [a]
-findLowPoints s = findLowPoints' [] [] s
+findLowPoints [] = []
+findLowPoints s = findLowPointsEast [] [] s ++ findLowPointsSouth s
+
+findLowPointsSouth [] = []
+findLowPointsSouth (x:xs) = findLowPointsEast x [] xs ++ findLowPointsSouth xs
 
 
--- | Find low points given a north and west row, and the rest of a matrix
--- >>> findLowPoints' [] []  ["219", "398","985"]
--- "15"
--- >>> findLowPoints' "19" "39" ["98", "85"]
+-- | Find low points given a north and west row, and the rest of a matrix to the
+-- east
+-- >>> findLowPointsEast [] []  ["219", "398","985"]
+-- "1"
+-- >>> findLowPointsEast "19" "39" ["98", "85"]
+-- ""
+-- >>> findLowPointsEast "9" "9" ["8", "5"]
+-- ""
+-- >>> findLowPointsEast "98" "9" ["85"]
 -- "5"
--- >>> findLowPoints' "9" "9" ["8", "5"]
--- "5"
--- >>> findLowPoints' "98" "9" ["85"]
--- "5"
-findLowPoints' :: (Bounded a, Ord a) => [a] -> [a] -> [[a]] -> [a]
-findLowPoints' _ _ [] = []
-findLowPoints' _ _ [[]] = []
-findLowPoints' ns ws l@(x:xs) = let (n, e, s, w, p) = getPoints ns ws l
-                                    (ens, ews, el) = getNextEast ns ws l
-                                    (sns, sws, sl) = getNextSouth ns ws l
-                                    elp = findLowPoints' ens ews el
-                                    slp = findLowPoints' sns sws sl
-                                 in case isLowPoint n e s w p of
-                                    True -> [p] ++ elp ++ slp
-                                    False -> [] ++ elp ++ slp
+findLowPointsEast :: (Bounded a, Ord a) => [a] -> [a] -> [[a]] -> [a]
+findLowPointsEast _ _ [] = []
+findLowPointsEast _ _ [[]] = []
+findLowPointsEast ns ws l@(x:xs) = let (n, e, s, w, p) = getPoints ns ws l
+                                       (ens, ews, el) = getNextEast ns ws l
+                                       elp = findLowPointsEast ens ews el
+                                       -- (sns, sws, sl) = getNextSouth ns ws l
+                                       -- slp = findLowPoints' sns sws sl
+                                    in case isLowPoint n e s w p of
+                                         True -> [p] ++ elp -- ++ slp
+                                         False -> [] ++ elp -- ++ slp
 
 -- | Extract the points, wich sensible defaults
 -- >>> getPoints [1,2] [3,4] [[5,6],[7,8 :: Int]]
@@ -86,11 +90,11 @@ getNextEast ns ws l = let ens = case ns of
                                   [] -> []
                                   _ -> tail ns
                           ews = case l of
-                                  [] -> []
+                                  -- [] -> []
                                   ([]:_) -> []
                                   _ -> map head l
                           el = case l of
-                                 [] -> []
+                                 -- [] -> []
                                  _ -> filter (not . empty) $ map tail l
                        in (ens, ews, el)
 
@@ -107,13 +111,13 @@ empty x = length x == 0
 getNextSouth:: Bounded a => [a] -> [a] -> [[a]] -> ([a], [a], [[a]])
 getNextSouth _ _ [] = ([],[],[])
 getNextSouth ns ws l = let sns = case l of
-                                  [] -> []
+                                  -- [] -> []
                                   _ -> head l
                            sws = case ws of
                                   [] -> []
                                   _ -> tail ws
                            sl = case l of
-                                 [] -> []
+                                 -- [] -> []
                                  _ -> tail l
                          in (sns, sws, sl)
 

@@ -3,6 +3,7 @@ module AoCUtils (
         ,sort
         ,splitStringAt
         ,toInt
+        ,cToInt
         ,transpose
                 ) where
 
@@ -44,6 +45,12 @@ splitStringAt p s = let (xs, ys) = break p s
 -- 2
 toInt :: String -> Int
 toInt s = read s ::Int
+
+-- | Convert char to an Int
+-- >>> cToInt '2'
+-- 2
+cToInt :: Char -> Int
+cToInt c = read [c] ::Int
 
 -- | Transpose a matrix
 -- https://stackoverflow.com/questions/2578930/understanding-this-matrix-transposition-function-in-haskell
