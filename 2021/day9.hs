@@ -3,12 +3,19 @@ import AoCUtils
 
 main = do line <-getContents
           print $ day91 $ lines line
+          print $ day92 $ lines line
 
 -- | Compute risk
 -- >>> day91 ["2199943210","3987894921","9856789892","8767896789","9899965678"]
 -- 15
 day91 :: [String] -> Int
 day91 l = sum $ map (1+) $ map cToInt $ findLowPoints l
+
+-- | Find basins
+-- >>> day92 ["2199943210","3987894921","9856789892","8767896789","9899965678"]
+-- 1134
+day92 :: [String] -> Int
+day92 l = 0
 
 -- | Find low points in a 2D matrix
 -- >>> findLowPoints ["219", "398","985"]
