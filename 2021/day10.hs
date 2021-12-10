@@ -1,14 +1,27 @@
 import System.IO
+import AoCUtils
 
 main = do input<- getContents
-          print $ day10 $ lines input
+          print $ day101 $ lines input
+          print $ day102 $ lines input
 
 -- | Find and score corrupted lines
--- >>> day10 ["[({(<(())[]>[[{[]{<()<>>","[(()[<>])]({[<{<<[]>>(","{([(<{}[<>[]}>{[]{[(<()>","(((({<>}<{<{<>}{[]{[]{}","[[<[([]))<([[{}[[()]]]","[{[{({}]{}}([{[{{{}}([]","{<[[]]>}<{[{[{[]{()[[[]","[<(<(<(<{}))><([]([]()","<{([([[(<>()){}]>(<<{{","<{([{{}}[<[[[<>{}]]]>[]]"]
+-- >>> day101 ["[({(<(())[]>[[{[]{<()<>>","[(()[<>])]({[<{<<[]>>(","{([(<{}[<>[]}>{[]{[(<()>","(((({<>}<{<{<>}{[]{[]{}","[[<[([]))<([[{}[[()]]]","[{[{({}]{}}([{[{{{}}([]","{<[[]]>}<{[{[{[]{()[[[]","[<(<(<(<{}))><([]([]()","<{([([[(<>()){}]>(<<{{","<{([{{}}[<[[[<>{}]]]>[]]"]
 -- 26397
-day10 :: [String] -> Int
-day10 l = sum $ map score $ [x | (x:xs) <- map (checkChunks []) l, isClose x]
+day101 :: [String] -> Int
+day101 l = sum $ map scoreCorrupted
+        $ [x | (x:xs) <- map (checkChunks []) l, isClose x]
 
+-- | Find and score completion for incomplete lines
+-- >>> day102 ["[({(<(())[]>[[{[]{<()<>>","[(()[<>])]({[<{<<[]>>(","{([(<{}[<>[]}>{[]{[(<()>","(((({<>}<{<{<>}{[]{[]{}","[[<[([]))<([[{}[[()]]]","[{[{({}]{}}([{[{{{}}([]","{<[[]]>}<{[{[{[]{()[[[]","[<(<(<(<{}))><([]([]()","<{([([[(<>()){}]>(<<{{","<{([{{}}[<[[[<>{}]]]>[]]"]
+-- 288957
+--
+-- day102 :: [String] -> Int
+-- day102 _ = 0
+day102 l = median $ sort
+  $ [ scoreCompletion x
+  | x <- map (checkChunks []) l
+  , (not . isClose) $ head x]
 
 -- | Check a line for corruption, and return the first corrupted character
 -- >>> checkChunks [] "{([(<{}[<>[]}>{[]{[(<()>"
@@ -27,6 +40,24 @@ day10 l = sum $ map score $ [x | (x:xs) <- map (checkChunks []) l, isClose x]
 -- ""
 -- >>> checkChunks [] "("
 -- "("
+-- >>> map closing $ checkChunks [] "("
+-- ")"
+-- >>> map closing $ checkChunks "[(" ""
+-- "])"
+-- >>> map closing $ checkChunks "(" "["
+-- "])"
+-- >>> map closing $ checkChunks [] "([{<"
+-- ">}])"
+-- >>> map closing $ checkChunks [] "[({(<(())[]>[[{[]{<()<>>"
+-- "}}]])})]"
+-- >>> map closing $ checkChunks [] "[(()[<>])]({[<{<<[]>>("
+-- ")}>]})"
+-- >>> map closing $ checkChunks [] "(((({<>}<{<{<>}{[]{[]{}"
+-- "}}>}>))))"
+-- >>> map closing $ checkChunks [] "{<[[]]>}<{[{[{[]{()[[[]"
+-- "]]}}]}]}>"
+-- >>> map closing $ checkChunks [] "<{([{{}}[<[[[<>{}]]]>[]]"
+-- "])}>"
 checkChunks :: String -> String -> String
 checkChunks [] [] = []
 checkChunks y [] = y
@@ -34,9 +65,9 @@ checkChunks [] (x:xs) = case isOpen x of
                         True -> checkChunks [x] xs
                         False -> [x]
 checkChunks (y:ys) (x:xs) = case isOpen x of
-                        True -> checkChunks (x:y:ys) xs ++ (y:ys)
+                        True -> checkChunks (x:y:ys) xs
                         False -> case closeMatchesOpen y x of
-                                True -> checkChunks ys xs ++ (ys)
+                                True -> checkChunks ys xs
                                 False -> (x:y:ys)
 
 
@@ -104,13 +135,49 @@ isClose = flip elem $ map last pairs
 -- >>> closeMatchesOpen '<' '}'
 -- False
 closeMatchesOpen :: Char -> Char -> Bool
-closeMatchesOpen open close = let (pair:[]) = [x | x <- pairs, open == head x]
-                               in close == last pair
+closeMatchesOpen open close = close == closing open
 
-score :: Char -> Int
-score ')' = 3
-score ']' = 57
-score '}' = 1197
-score '>' = 25137
-score 'v' = 0
-score 'i' = 0
+-- | Return the matching closing character
+-- >>> closing '('
+-- ')'
+-- >>> closing '['
+-- ']'
+-- >>> closing '{'
+-- '}'
+-- >>> closing '<'
+-- '>'
+closing :: Char -> Char
+closing open = let (pair:[]) = [x | x <- pairs, open == head x]
+                               in last pair
+
+scoreCorrupted :: Char -> Int
+scoreCorrupted ')' = 3
+scoreCorrupted ']' = 57
+scoreCorrupted '}' = 1197
+scoreCorrupted '>' = 25137
+
+scoreClose :: Char -> Int
+scoreClose ')' = 1
+scoreClose ']' = 2
+scoreClose '}' = 3
+scoreClose '>' = 4
+-- trick to avoid having to find closing character:
+-- just score the opening ones the same way
+scoreClose '(' = 1
+scoreClose '[' = 2
+scoreClose '{' = 3
+scoreClose '<' = 4
+
+-- | Score completion
+-- >>> scoreCompletion "])}>"
+-- 294
+-- >>> scoreCompletion "}}]])})]"
+-- 288957
+-- >>> scoreCompletion ")}>]})"
+-- 5566
+-- >>> scoreCompletion "}}>}>))))"
+-- 1480781
+-- >>> scoreCompletion "]]}}]}]}>"
+-- 995444
+scoreCompletion :: String -> Int
+scoreCompletion s = foldl (\acc -> \c -> 5 * acc + scoreClose c) 0 s

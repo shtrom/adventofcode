@@ -1,5 +1,6 @@
 module AoCUtils (
         aggregate
+        ,median
         ,sort
         ,splitStringAt
         ,toInt
@@ -18,6 +19,12 @@ aggregate l@(x:xs) = let (xs, ys) = break (/=x) l
                        (c, x)
                        :aggregate ys
                     )
+
+-- | Calculate a median, almost correctly
+-- >>> median [7,1,3,2,3,9,1]
+-- 3
+median :: [Int] -> Int
+median l = head $ drop (div (length l) 2) $ sort l
 
 -- | Sort a list of comparables
 -- >>> sort [1,9,2,8]
