@@ -35,32 +35,6 @@ parseInput input = let l = lines2 input in
                        ,parseSheets $ tail l
                        )
 
--- | Split string on every two consecutive newlines
--- >>> lines2 "1\n2\n\n3,4\n"
--- ["1\n2","3,4\n"]
-lines2 :: String -> [String]
-lines2 "" = []
-lines2 s = let (xs, ys) = break2 (=='\n') s
-          in case ys of
-             [] -> [xs]
-             [y] -> [xs, [y]]
-             otherwise -> (xs
-                          : lines2 (drop 2 ys)
-                          )
-
--- | Split string on two consecutive characters matching the predicate
--- >>> break2 (>1) [1,1,2,1,2,2,1]
--- ([1,1,2,1],[2,2,1])
--- >>> break2 (>1) [2]
--- ([2],[])
-break2 :: (a -> Bool) -> [a]-> ([a], [a])
-break2 p [] = ([], [])
-break2 p (x1:[]) = ([x1], [])
-break2 p l@(x1:x2:xs) = case and [p x1, p x2] of
-                          True -> ([], l)
-                          False -> let (y1, ys) = break2 p (x2:xs)
-                                   in ((x1:y1), ys)
-
 -- | Parse an input string into a series of numbers
 -- >>> parseNumbers "1,2,3"
 -- [Number 1,Number 2,Number 3]
