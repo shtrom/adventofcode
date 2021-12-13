@@ -11,6 +11,7 @@ main = do input <- getContents
               dots = map parseDots d
               folds = map parseFolds f
           print $ day131 (head folds) dots
+          putStr $ day132 folds dots
 
 -- | Parse dot coordinates
 -- >>> parseDots "6,10"
@@ -37,11 +38,32 @@ parseFolds s = let (d:i:_) = splitStringAt (== '=') $ last $ words s
 day131 :: Fold -> [Dot] -> Int
 day131 f d = length $ uniq $ sort $ map (foldDot f) d
 
--- | Day 13 all the way!
--- >>> day132 [Fold Y 7,Fold X 5] [(6,10),(0,14),(9,10),(0,3),(10,4),(4,11),(6,0),(6,12),(4,1),(0,13),(10,12),(3,4),(3,0),(8,4),(1,10),(2,14),(8,10),(9,0)]
--- 16
-day132 :: [Fold] -> [Dot] -> Int
-day132 f d = length $ uniq $ sort $ applyFolds f d
+-- | Day 13 part 2
+day132 :: [Fold] -> [Dot] -> String
+day132 f d = makeLines $ map swapXY $ uniq $ sort $ map swapXY $ applyFolds f d
+
+swapXY :: (a,b) -> (b,a)
+swapXY (x,y) = (y,x)
+
+-- | Render the dots
+-- XXX: Does not support more than one newline at a time
+-- >>> makeLines [(1,0),(3,0),(2,1),(0,2)]
+-- "\n.#.#\n..#\n#"
+makeLines :: [Dot] -> String
+makeLines [] = []
+-- makeLines s@((x,y):_) = (take (y) $ repeat '\n')
+--                         ++ (take (x) $ repeat '.') ++ makeLine s
+makeLines s@((x,y):_) = "\n"
+                        ++ (take (x) $ repeat '.') ++ makeLine s
+makeLine :: [Dot] -> String
+makeLine [] = []
+makeLine [x] = "#"
+makeLine (d:d':ds) = let (x,y) = d
+                         (x',y') = d'
+                       in case y==y' of
+                            True -> "#" ++ (take (x'-x-1) $ repeat '.')
+                                    ++ makeLine (d':ds)
+                            False -> "#" ++ makeLines (d':ds)
 
 -- | Deduplicate sorted list
 -- >>> uniq [1,1,2,3,4,4,5]
