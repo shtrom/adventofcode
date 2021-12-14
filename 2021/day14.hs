@@ -6,6 +6,7 @@ type Rule = (String, String)
 main = do input <- getContents
           let (template, rules) = parseInput input
           print $ day141 rules template
+          print $ day142 rules template
 
 -- | Parse input
 -- >>> parseInput "NNCB\n\nCH -> B\nHH -> N\n"
@@ -21,6 +22,15 @@ parseInput s = let [t, r] = lines2 s
 -- 1588
 day141 :: [Rule] -> String -> Int
 day141 r t = let p = repeatProcess 10 r t
+                 agg = sort $ aggregate $ sort p
+              in (fst $ last agg) - (fst $ head agg)
+
+-- |> Iterate template 40 times, and subtract the quantity of least and most
+-- common elements
+-- >>> day141 [("CH","B"),("HH","N"),("CB","H"),("NH","C"),("HB","C"),("HC","B"),("HN","C"),("NN","C"),("BH","H"),("NC","B"),("NB","B"),("BN","B"),("BB","N"),("BC","B"),("CC","N"),("CN","C")] "NNCB"
+-- 2188189693529
+day142 :: [Rule] -> String -> Int
+day142 r t = let p = repeatProcess 40 r t
                  agg = sort $ aggregate $ sort p
               in (fst $ last agg) - (fst $ head agg)
 
