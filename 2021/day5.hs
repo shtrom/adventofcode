@@ -9,15 +9,32 @@ main = do line <- getContents
           print $ day51 $ filter horizontalOrVertical segments
 
 -- | Count the number of intersections
--- >>> day51 [((0,9),(5,9)),((9,4),(3,4)),((2,2),(2,1)),((7,0),(7,4)),((0,9),(2,9)),((3,4),(1,4))]
+-- >>> day51 [((0,9),(5,9)),((3,4),(9,4)),((2,1),(2,1)),((7,0),(7,4)),((0,9),(2,9)),((1,4),(3,4))]
 -- 5
 day51:: [Segment] -> Int
-day51 = countIntersections
+day51 = countOverlaps
 -- day51 l = [ [s1,s2] | s1 <- l, s2 <- l, segmentIntersect s1 s2]
 
 countIntersections :: [Segment] -> Int
 countIntersections (xs:[]) = 0
 countIntersections (x:xs) = (length $ filter (segmentIntersect x) xs) + countIntersections xs
+
+countOverlaps :: [Segment] -> Int
+countOverlaps (x:[]) = 0
+countOverlaps (x:xs) = sum (map (measureOverlaps x) xs) + countOverlaps (xs)
+
+-- | Measure overlapping bits of segments
+-- >>> measureOverlaps ((0,0),(0,4)) ((0,2),(0,4))
+-- 3
+-- >>> measureOverlaps ((1,0),(1,4)) ((0,2),(0,4))
+-- 0
+measureOverlaps :: Segment -> Segment -> Int
+measureOverlaps s1 s2
+        | segmentIntersect s1 s2 = let es1 = expandSegment s1
+                                       es2 = expandSegment s2
+                                       agg = aggregate $ sort $ es1 ++ es2
+                                    in foldl (\x -> \y -> x + (fst y) - 1) 0 agg
+        | otherwise = 0
 
 -- | Parse segments coordinates from a string
 -- >>> parseSegments ["0,9 -> 5,9", "8,0 -> 0,8"]
@@ -50,6 +67,22 @@ parseSegment s = let (ss:es:cruft) = splitStringAt (=='-') $ filter (not. flip e
 parseCoords :: String -> Coords
 parseCoords s = let (x:y:[]) = map toInt $ splitStringAt (==',') s
                 in (x, y)
+
+-- | Expand a segment to all its points
+-- >>> expandSegment ((0,0), (4,0))
+-- [(0,0),(1,0),(2,0),(3,0),(4,0)]
+-- >>> expandSegment ((0,0), (0,4))
+-- [(0,0),(0,1),(0,2),(0,3),(0,4)]
+-- >>> expandSegment ((0,4), (0,0))
+-- [(0,4),(0,3),(0,2),(0,1),(0,0)]
+expandSegment :: Segment -> [Coords]
+expandSegment s@((x,y),(x',y'))
+  | x==x' && y==y' = [(x',y')]
+  | x==x' && y'>y = [(x,y)] ++ expandSegment ((x,y+1),(x',y'))
+  | x==x' && y'<y = [(x,y)] ++ expandSegment ((x,y-1),(x',y'))
+  | y==y' && x'>x = [(x,y)] ++ expandSegment ((x+1,y),(x',y'))
+  | y==y' && x'<x = [(x,y)] ++ expandSegment ((x-1,y),(x',y'))
+  -- XXX: diagonal
 
 horizontalOrVertical :: Segment -> Bool
 horizontalOrVertical s = any (==True) [horizontal s, vertical s]
@@ -122,9 +155,13 @@ segmentIntersect s1 s2 =
 -- ((3,4),(9,4))
 -- >>> sortSegment ((9,4),(3,4))
 -- ((3,4),(9,4))
+-- >>> sortSegment ((2,2),(2,1))
+-- ((2,1),(2,2))
 sortSegment :: Segment -> Segment
-sortSegment ((xa1,ya1),(xa2,ya2)) | xa1 <= xa2 =  ((xa1,ya1),(xa2,ya2))
-  | xa2 < xa1 =  ((xa2,ya2),(xa1,ya1))
+sortSegment ((xa1,ya1),(xa2,ya2))
+  | xa2 < xa1 = ((xa2,ya2),(xa1,ya1))
+  | ya2 < ya1 = ((xa2,ya2),(xa1,ya1))
+  | otherwise =  ((xa1,ya1),(xa2,ya2))
 
 -- | Check if the bounding boxes of two segment collide
 -- >>> boundingBoxCollide ((2,4),(6,10)) ((3,3),(7,3))
