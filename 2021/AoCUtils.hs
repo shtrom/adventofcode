@@ -1,19 +1,26 @@
 module AoCUtils (
-        aggregate
+        Aggregate
+        ,aggregate
         ,break2
         ,lines2
         ,median
+        ,mergeAggregates
+        ,multAggregate
+        ,pivotSort
         ,sort
+        ,sortAggregates
         ,splitStringAt
         ,toInt
         ,cToInt
         ,transpose
                 ) where
 
+type Aggregate a = (Int, a)
+
 -- | Given a sorted list, count the re-occurence of each element
 -- >>> aggregate [1,2,2,3,3,3]
 -- [(1,1),(2,2),(3,3)]
-aggregate :: Eq a => [a] -> [(Int, a)]
+aggregate :: Eq a => [a] -> [Aggregate a]
 aggregate [] = []
 aggregate l@(x:xs) = let (xs, ys) = break (/=x) l
                          c = length xs
@@ -54,13 +61,44 @@ lines2 s = let (xs, ys) = break2 (=='\n') s
 median :: [Int] -> Int
 median l = head $ drop (div (length l) 2) $ sort l
 
+-- | Merge sorted aggregates
+-- >>> mergeAggregates [(1,1),(2,2),(3,3)] [(1,1),(2,2),(3,3)]
+-- [(2,1),(4,2),(6,3)]
+mergeAggregates :: (Ord a, Eq a) => [Aggregate a] -> [Aggregate a] -> [Aggregate a]
+mergeAggregates a [] = a
+mergeAggregates [] b = b
+mergeAggregates a@((ac,av):as) b@((bc,bv):bs)
+  | av==bv = [(ac+bc,av)] ++ mergeAggregates as bs
+  | av<bv = [(ac,av)] ++ mergeAggregates as b
+  | av>bv = [(bc,bv)] ++ mergeAggregates a bs
+
+-- | Multiply a aggregate count by a given number
+-- >>> multAggregate 3 (1,2)
+-- (3,2)
+multAggregate :: Int -> Aggregate a -> Aggregate a
+multAggregate n (c,v) = (c*n,v)
+
+-- | Pivot sort with arbitrary comparison functions
+-- >>> pivotSort (<) (>=) [2,8,4,9,1,0]
+-- [0,1,2,4,8,9]
+-- >>> pivotSort (>) (<=) [2,8,4,9,1,0]
+-- [9,8,4,2,1,0]
+pivotSort :: (a -> a -> Bool) -> (a -> a -> Bool) -> [a] -> [a]
+pivotSort _ _ [] = []
+pivotSort _ _ [x] = [x]
+pivotSort lt ge (x:xs) = (pivotSort lt ge $ filter (flip lt x) xs) ++ [x] ++ (pivotSort lt ge $ filter (flip ge x) xs)
+
 -- | Sort a list of comparables
 -- >>> sort [1,9,2,8]
 -- [1,2,8,9]
 sort :: Ord a => [a] -> [a]
-sort [] = []
-sort [x] = [x]
-sort (x:xs) = (sort $ filter (<x) xs) ++ [x] ++ (sort $ filter (>=x) xs)
+sort = pivotSort (<) (>=)
+
+-- | Sort aggregates by aggregated value
+-- >>> sortAggregates [(1,3),(2,1),(3,2)]
+-- [(2,1),(3,2),(1,3)]
+sortAggregates :: Ord a => [Aggregate a] -> [Aggregate a]
+sortAggregates = pivotSort (\(_,v1) -> \(_,v2) -> v1 < v2) (\(_,v1) -> \(_,v2) -> v1 >= v2)
 
 -- | Split String at arbitrary character matching predicate
 -- >>> splitStringAt (==',') "1,2,3"
