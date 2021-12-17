@@ -78,15 +78,3 @@ mostCommon (z, o) = case (z>o) of
 
 leastCommon:: (Int,Int) -> Int
 leastCommon x = 1 - (mostCommon x)
-
--- | Convert an array of bits to a decimal value
--- >>> bitsToDec [1,0,0]
--- 4
--- >>> bitsToDec [1,0,1]
--- 5
-bitsToDec :: [Int] -> Int
-bitsToDec l = rBitsToDec $ reverse l
-
-rBitsToDec :: [Int] -> Int
-rBitsToDec [] = 0
-rBitsToDec (x:xs) = x + 2 * (rBitsToDec xs)

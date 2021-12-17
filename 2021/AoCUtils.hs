@@ -1,6 +1,9 @@
 module AoCUtils (
         Aggregate
+        ,BitString
         ,aggregate
+        ,bitStringToBits
+        ,bitsToDec
         ,break2
         ,lines2
         ,median
@@ -28,6 +31,27 @@ aggregate l@(x:xs) = let (xs, ys) = break (/=x) l
                        (c, x)
                        :aggregate ys
                     )
+
+type BitString = String
+type Bit = Int
+
+-- | Convert a bit string to a list of Int-like bits
+-- >>> bitStringToBits "0011"
+-- [0,0,1,1]
+bitStringToBits :: String -> [Bit]
+bitStringToBits = map (toInt . (flip (:) []))
+
+-- | Convert an array of bits to a decimal value
+-- >>> bitsToDec [1,0,0]
+-- 4
+-- >>> bitsToDec [1,0,1]
+-- 5
+bitsToDec :: [Bit] -> Int
+bitsToDec l = bitsToDec' $ reverse l
+
+bitsToDec' :: [Int] -> Int
+bitsToDec' [] = 0
+bitsToDec' (x:xs) = x + 2 * (bitsToDec' xs)
 
 -- | Split string on two consecutive characters matching the predicate
 -- >>> break2 (>1) [1,1,2,1,2,2,1]
