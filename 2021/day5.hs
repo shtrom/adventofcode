@@ -12,16 +12,29 @@ main = do line <- getContents
 -- >>> day51 [((0,9),(5,9)),((3,4),(9,4)),((2,1),(2,1)),((7,0),(7,4)),((0,9),(2,9)),((1,4),(3,4))]
 -- 5
 day51:: [Segment] -> Int
-day51 = countOverlaps
+day51 = length . aggregateOvelaps
 -- day51 l = [ [s1,s2] | s1 <- l, s2 <- l, segmentIntersect s1 s2]
 
 countIntersections :: [Segment] -> Int
 countIntersections (xs:[]) = 0
 countIntersections (x:xs) = (length $ filter (segmentIntersect x) xs) + countIntersections xs
 
-countOverlaps :: [Segment] -> Int
-countOverlaps (x:[]) = 0
-countOverlaps (x:xs) = sum (map (measureOverlaps x) xs) + countOverlaps (xs)
+aggregateOvelaps :: [Segment] -> [Aggregate Coords]
+aggregateOvelaps (x:[]) = []
+aggregateOvelaps (x:xs) = foldl mergeAggregates [] $ (map (checkOverlaps x) xs) ++ [aggregateOvelaps (xs)]
+
+-- | Check overlapping bits of segments
+-- >>> checkOverlaps ((0,0),(0,4)) ((0,2),(0,4))
+-- [(2,(0,2)),(2,(0,3)),(2,(0,4))]
+-- >>> checkOverlaps ((1,0),(1,4)) ((0,2),(0,4))
+-- []
+checkOverlaps :: Segment -> Segment -> [Aggregate Coords]
+checkOverlaps s1 s2
+        | segmentIntersect s1 s2 = let es1 = expandSegment s1
+                                       es2 = expandSegment s2
+                                       agg = aggregate $ sort $ es1 ++ es2
+                                    in filter (\(c,p) -> c>1) agg
+        | otherwise = []
 
 -- | Measure overlapping bits of segments
 -- >>> measureOverlaps ((0,0),(0,4)) ((0,2),(0,4))
@@ -29,12 +42,7 @@ countOverlaps (x:xs) = sum (map (measureOverlaps x) xs) + countOverlaps (xs)
 -- >>> measureOverlaps ((1,0),(1,4)) ((0,2),(0,4))
 -- 0
 measureOverlaps :: Segment -> Segment -> Int
-measureOverlaps s1 s2
-        | segmentIntersect s1 s2 = let es1 = expandSegment s1
-                                       es2 = expandSegment s2
-                                       agg = aggregate $ sort $ es1 ++ es2
-                                    in foldl (\x -> \y -> x + (fst y) - 1) 0 agg
-        | otherwise = 0
+measureOverlaps s1 s2 = length $ checkOverlaps s1 s2
 
 -- | Parse segments coordinates from a string
 -- >>> parseSegments ["0,9 -> 5,9", "8,0 -> 0,8"]
