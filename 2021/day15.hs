@@ -25,7 +25,7 @@ day151 = sum . lowestRiskPath
 -- 40
 day151' c = let w = length $ head c
                 h = length c
-             in sum $ lowestRiskPath' c (w-1) (h-1)
+             in sum $ lowestRiskPath'' c (w-1) (h-1)
 
 -- | Parse a cave into up, left and rest components
 -- >>> parseCave [[1,1,6,3,7,5,1,7,4,2],[1,3,8,1,3,7,3,6,7,2],[2,1,3,6,5,1,1,3,2,8],[3,6,9,4,9,3,1,5,6,9],[7,4,6,3,4,1,7,1,1,1],[1,3,1,9,1,2,8,1,3,7],[1,3,5,9,9,1,2,4,2,1],[3,1,2,5,4,2,1,6,3,9],[1,2,9,3,1,3,8,5,2,1],[2,3,1,1,9,4,4,5,8,1]]
@@ -47,13 +47,14 @@ pathStore c = memo (lowestRiskPath' c)
 fastLowestRiskPath :: [[Risk]] -> Int -> Int -> [Risk]
 fastLowestRiskPath c x y = pathStore c !! x !! y
 
--- | Memoised version of lowestRiskPath'
+-- | Memoised version of lowestRiskPath
 -- >>> lowestRiskPath' [[1,2,3],[4,5,6],[7,8,9]] 0 0
 -- []
 -- >>> lowestRiskPath' [[1,2,3],[4,5,6],[7,8,9]] 1 1
 -- [6,9]
 -- >>> lowestRiskPath' [[1,2,3],[4,5,6],[7,8,9]] 2 2
 -- [2,3,6,9]
+-- bob
 lowestRiskPath' :: [[Risk]] -> Int -> Int -> [Risk]
 lowestRiskPath' c 0 0 = []
 lowestRiskPath' c x y
@@ -63,15 +64,41 @@ lowestRiskPath' c x y
                     h = length $ head c
                     x' = w-x-1
                     y' = h-y-1
-                    rightPath = case x-1 >= 0 of
-                                  True -> [c !! (x'+1) !! y'] ++ (fastLowestRiskPath c (x-1) y)
-                                  False -> [div maxBound 2]
-                    downPath = case y-1 >= 0 of
-                                 True -> [c !! x' !! (y'+1)] ++ (fastLowestRiskPath c x (y-1))
-                                 False -> [div maxBound 2]
-                 in case (sum downPath)<(sum rightPath) of
-                      True -> downPath
-                      False -> rightPath
+                    rightPath = if x-1 >= 0
+                                  then [c !! (x'+1) !! y'] ++ (fastLowestRiskPath c (x-1) y)
+                                  else [div maxBound 2]
+                    downPath = if y-1 >= 0
+                                 then [c !! x' !! (y'+1)] ++ (fastLowestRiskPath c x (y-1))
+                                 else [div maxBound 2]
+                 in if (sum downPath)<(sum rightPath) then downPath else rightPath
+
+-- | Variation on memoised version of lowestRiskPath
+-- Based on [1]
+-- [1] https://www.ryanhmckenna.com/2015/05/memoization-in-haskell.html
+-- >>> lowestRiskPath'' [[1,2,3],[4,5,6],[7,8,9]] 0 0
+-- []
+-- >>> lowestRiskPath'' [[1,2,3],[4,5,6],[7,8,9]] 1 1
+-- [6,9]
+-- >>> lowestRiskPath'' [[1,2,3],[4,5,6],[7,8,9]] 2 2
+-- [2,3,6,9]
+lowestRiskPath'' :: [[Risk]] -> Int -> Int -> [Risk]
+lowestRiskPath'' c x y
+  | y >= (length c) = error "y too large"
+  | x >= (length $ head c) = error "x too large"
+  | otherwise = localPathStore !! x !! y where
+          localPathStore = memo (lrp c)
+          lrp _ 0 0 = []
+          lrp c x y = let w = length c
+                          h = length $ head c
+                          x' = w-x-1
+                          y' = h-y-1
+                          rightPath = if x-1 >= 0
+                                         then [c !! (x'+1) !! y'] ++ (localPathStore !! (x-1) !! y)
+                                         else [div maxBound 2]
+                          downPath = if y-1 >= 0
+                                        then [c !! x' !! (y'+1)] ++ (localPathStore !! x !! (y-1))
+                                        else [div maxBound 2]
+                        in if (sum downPath)<(sum rightPath) then downPath else rightPath
 
 -- | Find the lowest-risk path through the cave
 -- [9]
@@ -94,9 +121,9 @@ lowestRiskPath cave@(up,left,rest) = let rightPath = case up of
                                          downPath = case left of
                                                       [] -> [div maxBound 2]
                                                       _ -> [head left] ++ (lowestRiskPath $ goDown cave)
-                                      in case (sum downPath)<(sum rightPath) of
-                                           True -> downPath
-                                           False -> rightPath
+                                      in if (sum downPath)<(sum rightPath)
+                                           then downPath
+                                           else rightPath
 
 -- | Go right in the cave
 -- >>> goRight ([2,3],[4,7],[[5,6],[8,9]])
