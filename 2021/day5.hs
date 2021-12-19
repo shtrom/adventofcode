@@ -12,16 +12,23 @@ main = do line <- getContents
 -- >>> day51 [((0,9),(5,9)),((3,4),(9,4)),((2,1),(2,1)),((7,0),(7,4)),((0,9),(2,9)),((1,4),(3,4))]
 -- 5
 day51:: [Segment] -> Int
-day51 = length . aggregateOvelaps
+day51 = length . aggregateOverlaps
 -- day51 l = [ [s1,s2] | s1 <- l, s2 <- l, segmentIntersect s1 s2]
 
 countIntersections :: [Segment] -> Int
 countIntersections (xs:[]) = 0
 countIntersections (x:xs) = (length $ filter (segmentIntersect x) xs) + countIntersections xs
 
-aggregateOvelaps :: [Segment] -> [Aggregate Coords]
-aggregateOvelaps (x:[]) = []
-aggregateOvelaps (x:xs) = foldl mergeAggregates [] $ (map (checkOverlaps x) xs) ++ [aggregateOvelaps (xs)]
+-- | Aggregate overlapping bits between segments
+-- XXX: The count of overlaps is incorrect as segments are always found to
+-- overlap in pairs.
+-- >>> aggregateOverlaps [((0,0),(0,4)),((0,2),(0,4)),((0,3),(0,4)),((1,0),(1,4))]
+-- [(2,(0,2)),(6,(0,3)),(6,(0,4))]
+-- >>> aggregateOverlaps [((0,9),(5,9)),((3,4),(9,4)),((2,1),(2,1)),((7,0),(7,4)),((0,9),(2,9)),((1,4),(3,4))]
+-- [(2,(0,9)),(2,(1,9)),(2,(2,9)),(2,(3,4)),(2,(7,4))]
+aggregateOverlaps :: [Segment] -> [Aggregate Coords]
+aggregateOverlaps (x:[]) = []
+aggregateOverlaps (x:xs) = foldl mergeAggregates [] $ (map (checkOverlaps x) xs) ++ [aggregateOverlaps (xs)]
 
 -- | Check overlapping bits of segments
 -- >>> checkOverlaps ((0,0),(0,4)) ((0,2),(0,4))
