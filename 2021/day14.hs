@@ -36,7 +36,7 @@ splitTemplate (x:x':xs) = sort $ [[x,x']] ++ splitTemplate (x':xs)
 -- 1588
 -- >>> day14 40 [("CH","B"),("HH","N"),("CB","H"),("NH","C"),("HB","C"),("HC","B"),("HN","C"),("NN","C"),("BH","H"),("NC","B"),("NB","B"),("BN","B"),("BB","N"),("BC","B"),("CC","N"),("CN","C")] [(1,"NN"),(1,"NC"),(1,"CB")] 'N' 'B'
 -- 2188189693529
--- day14 :: Int -> [Rule] -> [Aggregate Pair] -> Element -> Element -> Int
+day14 :: Int -> [Rule] -> [Aggregate Pair] -> Element -> Element -> Int
 day14 n rr p f l = let agg = splitPairs $ repeatProcessAggregates n rr p
                        doubleAgg = sort $ mergeAggregates agg $ sortAggregates $ aggregate [f,l] -- each single letter is in two pair, except for the first and last of the template
                     in div ((fst $ last doubleAgg) - (fst $ head doubleAgg)) 2
