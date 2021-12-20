@@ -7,6 +7,7 @@ type Segment = (Coords, Coords)
 main = do line <- getContents
           let segments = parseSegments $ lines line
           print $ day51 $ filter horizontalOrVertical segments
+          print $ day51 segments
 
 -- | Count the number of intersections
 -- >>> day51 [((0,9),(5,9)),((3,4),(9,4)),((2,1),(2,1)),((7,0),(7,4)),((0,9),(2,9)),((1,4),(3,4))]
@@ -87,14 +88,12 @@ parseCoords s = let (x:y:[]) = map toInt $ splitStringAt (==',') s
 -- [(0,0),(0,1),(0,2),(0,3),(0,4)]
 -- >>> expandSegment ((0,4), (0,0))
 -- [(0,4),(0,3),(0,2),(0,1),(0,0)]
+-- >>> expandSegment ((0,0), (3,3))
+-- [(0,0),(1,1),(2,2),(3,3)]
 expandSegment :: Segment -> [Coords]
 expandSegment s@((x,y),(x',y'))
   | x==x' && y==y' = [(x',y')]
-  | x==x' && y'>y = [(x,y)] ++ expandSegment ((x,y+1),(x',y'))
-  | x==x' && y'<y = [(x,y)] ++ expandSegment ((x,y-1),(x',y'))
-  | y==y' && x'>x = [(x,y)] ++ expandSegment ((x+1,y),(x',y'))
-  | y==y' && x'<x = [(x,y)] ++ expandSegment ((x-1,y),(x',y'))
-  -- XXX: diagonal
+  | otherwise = [(x,y)] ++ expandSegment ((x+signum (x'-x),y+signum (y'-y)),(x',y'))
 
 horizontalOrVertical :: Segment -> Bool
 horizontalOrVertical s = any (==True) [horizontal s, vertical s]
